@@ -88,7 +88,7 @@ for name, algo in algo_dict.items():
 
     # plot the network clusters
     viz.plot_network_clusters(nx_g, pred_coms, pos, figsize=(5, 5))
-    plt.title(f'Clusters for {name} algo of {graph_name}.')
+    plt.title(f'Clusters for {name} algo of {graph_name}, AMI = {round(ami_score, 3)}')
     plt.show()
 
     # # plot the graph
@@ -108,4 +108,5 @@ viz.plot_com_properties_relation(coms, evaluation.size, evaluation.internal_edge
 plt.show()
 
 viz.plot_com_stat(coms, evaluation.internal_edge_density)
+plt.show()
 
