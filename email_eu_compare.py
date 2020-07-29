@@ -16,10 +16,10 @@ from cdlib import evaluation
 from sklearn import metrics
 
 #%% load ground truth community data and the network data
-df_truth = pd.read_csv('email-Eu-core-department-labels.txt', sep=' ', header=None, dtype=str)
+df_truth = pd.read_csv('email/email-Eu-core-department-labels.txt', sep=' ', header=None, dtype=str)
 df_truth.columns = ['node', 'truth']
 
-df_edges = pd.read_csv('email-Eu-core.txt', sep=' ', header=None, dtype=str)
+df_edges = pd.read_csv('email/email-Eu-core.txt', sep=' ', header=None, dtype=str)
 df_edges.columns = ['Source', 'Target']
 
 
@@ -36,8 +36,8 @@ nx_g = nx_graph.subgraph(lcc)
 # next reduce our ground truth df down to just those nodes in the lcc.
 df_lcc_truth = df_truth[df_truth['node'].isin(list(lcc))]
 
-# need to make a nodeclustering object for ground truth, which takes a set of frozenset for communities
-# find all the unique communitied and define an empty set to catch a frozenset of all nodes in each community
+# need to make a nodeclustering object for ground truth, which takes a set of frozensets for communities
+# find all the unique communities and define an empty set to catch a frozenset of all nodes in each community
 truth_coms = df_truth['truth'].unique()
 communities_set = set()
 # iterate through the unique communities to get the nodes in each community and add them to the set as frozensets
@@ -65,8 +65,6 @@ plt.show()
 viz.plot_com_stat(ground_truth_com, evaluation.average_internal_degree)
 plt.show()
 
-
-
 # %% define algorithms and their names to iterate through
 algo_dict = {'louvain': algorithms.louvain,
              'leidan': algorithms.leiden,
@@ -84,6 +82,7 @@ results_dict = dict()
 # make a df with all the nodes.  will capture each model's clustering
 df_nodes = pd.DataFrame(list(nx_g.nodes))
 df_nodes.columns = ['node']
+df_nodes = pd.merge(df_nodes, df_lcc_truth, how='left', left_on='node', right_on='node')
 
 # iterate through the alogrithms
 for name, algo in algo_dict.items():
@@ -122,7 +121,9 @@ for name, algo in algo_dict.items():
     viz.plot_community_graph(nx_g, pred_coms, figsize=(5, 5))
     plt.title(f'Communities for {name} algo of {graph_name}.')
     plt.show()
-
+#%%
+pd.DataFrame(list(nx_g.edges)).to_csv('./email/email_edges.csv', index=False)
+df_nodes.to_csv('./email/email_nodes.csv', index=False)
 #%% analysis plots
 coms = [ground_truth_com]
 for name, results in results_dict.items():
