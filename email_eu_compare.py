@@ -138,7 +138,33 @@ plt.show()
 viz.plot_com_stat(coms, evaluation.internal_edge_density)
 plt.show()
 
+#%%
 
+df_report = pd.DataFrame([list(nx_g),
+                          [len(nx_g[node]) for node in nx_g.nodes()],
+                          list(nx.degree_centrality(nx_g).values()),
+                          nx.eigenvector_centrality(nx_g).values(),
+                          nx.closeness_centrality(nx_g).values(),
+                          nx.betweenness_centrality(nx_g).values()]
+                         ).T
+df_report.columns = ['Node', 'Targets', 'Degree',
+                     'Eigenvector', 'Centrality', 'Betweenness']
+df_report = (df_report.astype({'Degree':'float',
+                               'Eigenvector':'float', 'Centrality':'float', 'Targets': 'int',
+                               'Betweenness':'float'}).round(3))
+df_report.hist(['Degree',  'Eigenvector', 'Centrality', 'Betweenness'])
+plt.show()
+
+df_report.boxplot(['Degree',  'Eigenvector', 'Centrality', 'Betweenness'])
+plt.show()
+
+print(df_report.sort_values('Betweenness'))
+
+#%%
+
+df_nodes.groupby('truth').count()['node'].sort_values(ascending=False).plot(kind='bar')
+plt.title('Counts per Community')
+plt.show()
 
 
 
