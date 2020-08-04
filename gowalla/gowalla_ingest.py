@@ -38,6 +38,13 @@ UPDATE checkins SET geog = ST_SetSRID(
 conn.commit()
 c.close()
 conn.close()
+
+c.execute(f"""CREATE INDEX if not exists checkins_uid_idx on checkins (uid);""")
+conn.commit()
+c.execute(f"""CREATE INDEX if not exists checkins_loc_id_idx on checkins (loc_id);""")
+conn.commit()
+
+
 #%% make a sites table
 def make_sites(new_table_name, source_table, conn):
     c = conn.cursor()
