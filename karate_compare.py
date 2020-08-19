@@ -58,6 +58,8 @@ algo_dict = {'louvain': algorithms.louvain,
              'spinglass': algorithms.spinglass,
              'signficant_communities': algorithms.significance_communities}
 
+algo_dict = {'girvan_newman': algorithms.girvan_newman}
+
 # make a dict to store results about each algo
 results_dict = dict()
 # make a df with all the nodes.  will capture each model's clustering
@@ -65,10 +67,10 @@ df_nodes = pd.DataFrame(list(nx_g.nodes))
 df_nodes.columns = ['node']
 df_nodes = pd.merge(df_nodes, truth, how='left', left_on='node', right_on='node')
 
-#%%
+
 for name, algo in algo_dict.items():
     # run algos to make node_clustering objects
-    pred_coms = algo(nx_g)
+    pred_coms = algo(nx_g, level=1)
     communities = pred_coms.communities
 
     # need to convert the community groups from list of lists to a dict of lists for ingest to df
@@ -78,13 +80,13 @@ for name, algo in algo_dict.items():
             coms_dict[i] = [c]
 
     # make a df with the results of the algo
-    df_results = pd.DataFrame.from_dict(coms_dict).T.reset_index()
-    df_results.columns = ['node', name]
+    df_coms = pd.DataFrame.from_dict(coms_dict).T.reset_index()
+    df_coms.columns = ['node', name]
     # merge this results with the df_nodes to keep track of all the nodes' clusters
-    df_nodes = pd.merge(df_nodes, df_results, how='left', left_on='node', right_on='node')
+    df_nodes = pd.merge(df_nodes, df_coms, how='left', left_on='node', right_on='node')
 
     # merge the results and the ground truth together.
-    df_compare = pd.merge(truth, df_results, how='left', left_on='node', right_on='node')
+    df_compare = pd.merge(truth, df_coms, how='left', left_on='node', right_on='node')
     # We can then just adjusted mutual info to find similarity score
     ami_score = metrics.adjusted_mutual_info_score(df_compare[name], df_compare['truth'])
     print(f'The AMI for {name} algorithm is {round(ami_score, 3)}.')
@@ -104,6 +106,8 @@ for name, algo in algo_dict.items():
     # plt.title(f'Communities for {name} algo of {graph_name}.')
     # plt.show()
 
+df_results = pd.DataFrame.from_dict(results_dict).T.drop('pred_coms', axis=1)
+
 #%%
 coms = [ground_truth_com]
 for name, results in results_dict.items():
@@ -120,9 +124,14 @@ plt.show()
 
 #%%
 
-pred_coms = algorithms.leiden(nx_g)
 
 def analyze_communities(pred_coms, pos, label_pos):
+    # make a dict to store results about each algo
+    results_dict = dict()
+    # make a df with all the nodes.  will capture each model's clustering
+    df_nodes = pd.DataFrame(list(nx_g.nodes))
+    df_nodes.columns = ['node']
+    df_nodes = pd.merge(df_nodes, truth, how='left', left_on='node', right_on='node')
     name = pred_coms.method_name
     communities = pred_coms.communities
 
@@ -155,3 +164,5 @@ def analyze_communities(pred_coms, pos, label_pos):
     plt.title(f'Clusters for {name} algo of {graph_name}, \n AMI = {round(ami_score, 3)}')
     plt.show()
 
+pred_coms = algorithms.leiden(nx_g)
+analyze_communities(pred_coms, pos, label_pos)
